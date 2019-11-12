@@ -1,4 +1,4 @@
-<!-- 
+<!--
     turkey: an Amazon Mechanical Turk turn-key segment tool.
 
     MIT License
@@ -31,7 +31,7 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <style>
     #parent {
-        width: 1000px; 
+        width: 1000px;
         height: auto;
         overflow: hidden;
         position: relative;
@@ -42,9 +42,18 @@
         margin: auto;
     }
 
+    #child div {
+      background-color:limegreen;
+      position:absolute;
+    }
+    #child{;position:relative;display:inline-block;overflow:hidden; }
+    #horizontal{width:100%;height:2px;}
+    #vertical{width:2px;height:100%;}
+
     #myCanvas {
         position: absolute;
     }
+
 
     #pic{
         width: 100%;
@@ -92,6 +101,8 @@
         <li>The <strong>Mode toggle</strong> button indicates the current mode</li>
         <li>Press <strong>CTRL+Z</strong> or click the <strong>Undo</strong> button to undo last deletion/annotation.</li>
         <li>Press <strong>C</strong> to close polygon in polygon mode.</li>
+        <li>Press <strong>S</strong> to submit.</li>
+        <li>Press <strong>1 to 9</strong> to select a class.</li>
         <li>Click <strong>Delete/Annotate</strong> flip switch or press <strong>D</strong> to toggle between deleting and annotating.</li>
         <li>Click the <strong>Undo</strong> button to undo your last deletion/annotation depending on your current mode.</li>
         <li>Click the <strong>Reset</strong> button to clear all annotations.</li>
@@ -123,8 +134,9 @@
 
 <div id="parent">
     <div id="child">
-        <canvas id="myCanvas">
-        </canvas>
+        <div id="horizontal"></div>
+        <div id="vertical"></div>
+        <canvas id="myCanvas"></canvas>
         <img id="pic" src="${img_url}" />
     </div>
 </div>
@@ -171,7 +183,7 @@
         canvas.width = img.width;
         canvas.height = img.height;
         canvas.style.cursor = "crosshair";
-        
+
         $('#instruction').slideUp(1000);
 
         $('#title').click(function () {
@@ -246,6 +258,18 @@
         $("#delete_button"    ).click(setDeleteMode);
         $("#annotate_button"  ).click(setDeleteMode);
 
+        $('#child').on('mousemove', null, [$('#horizontal'), $('#vertical')],function(e){
+            e.data[1].css('left', e.offsetX==undefined?e.originalEvent.layerX:e.offsetX);
+            e.data[0].css('top', e.offsetY==undefined?e.originalEvent.layerY:e.offsetY);
+        });
+        $('#child').on('mouseenter', null, [$('#horizontal'), $('#vertical')], function(e){
+            e.data[0].show();
+            e.data[1].show();
+        }).on('mouseleave', null, [$('#horizontal'), $('#vertical')], function(e){
+                e.data[0].hide();
+                e.data[1].hide();
+        });
+
         document.getElementById("submitButton").disabled = false;
         document.getElementById("buttons").appendChild(document.getElementById("submitButton"));
 
@@ -260,7 +284,7 @@
 
         canvas.addEventListener('mouseout', function(evt) {
             dragStart = false;
-            dragged = false; 
+            dragged = false;
         });
 
         canvas.addEventListener('pointerdown', function (evt) {
@@ -414,7 +438,7 @@
             {
                 return;
             }
-            
+
             delete_mode = deleteMode;
             if (delete_mode == false) {
                 // annotate mode
@@ -623,7 +647,22 @@
             updateGraphics();
         }
 
-        window.addEventListener("keydown", function (evt) {
+        window.addEventListener("keydown", function(evt) {
+
+            // Press S for "Submit"
+            if (evt.key == 's' || evt.key == 'q') {
+                $("#submitButton").click()
+            }
+
+            // Press 0-9 to change the label
+            if (evt.key.match(/[0-9]/)) {
+                let val = (+evt.key)-1
+                if (val < 0) val = 0
+                const options = $("#class > option")
+                if (val >= options.length) val = options.length-1
+                options.eq(val).prop("selected", true)
+            }
+
             // Press E for "Mode toggle"
             if (evt.key == 'e') {
                 toggleMode();
